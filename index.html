@@ -7,18 +7,20 @@
         <canvas id="demoCanvas" width="500" height="500"></canvas>
     </body>
     <script>
+        class Obj{
+            constructor(){
+                this.x = 0;
+                this.y = 0;
+                this.r = 0;
+            }
+        }
         class State{
             constructor(){
                 this.life = 0;
-                this.yv = 0;
                 this.hitted = false;
-
-                this.playerX = 0;
-                this.playerY = 0;
+                this.player = new Obj();
+                this.enemy = new Obj();
                 this.playerYV = 0;
-                
-                this.enemyX = 0;
-                this.enemyY = 0;
             }
         }
 
@@ -29,11 +31,28 @@
         var score =new createjs.Text();
         var watch = new createjs.Shape(); 
         var state = new State();
-        var life = 0;
-        var yv = 0;
-        var hitted = false;
         function init() {
-            life = 3;
+            InitParam();
+            InitElement();
+        }
+
+        function InitParam(){
+            state.player.x = 100;
+            state.player.y = 100;
+            state.player.r = 10 -3;
+
+            state.enemy.x = 400;
+            state.enemy.y = 140;
+            state.enemy.r = 30;
+
+            state.life = 3;
+
+            state.playerYV = 0;
+
+            state.hitted = false;
+        }
+
+        function InitElement(){
             rect.graphics.beginFill("White").drawRect(0,0,500,500);
             stage.addChild(rect);
 
@@ -43,70 +62,85 @@
             stage.addChild(watch);
 
             player.graphics.beginFill("DeepSkyBlue").drawCircle(0, 0, 10);
-            player.x = 100;
-            player.y = 100;
             stage.addChild(player);
 
             enemy.graphics.beginFill("Red").drawCircle(0, 0, 30);
-            enemy.x = 400;
-            enemy.y = 150;
             stage.addChild(enemy);
 
             score.color = "Blue";
-            score.text = "♥ ".repeat(life);
             score.font = "bold 20px Arial";
             score.x = 450;
             score.y = 50;
             stage.addChild(score);
 
             stage.update();
-            
+
             player.addEventListener("click", handleClick);
             rect.addEventListener("click", handleClick);
 
             createjs.Ticker.timingMode = createjs.Ticker.RAF;
             createjs.Ticker.addEventListener("tick", handleTick);
         }
+
+        function ElementUpdate(_state){
+            player.x = state.player.x;
+            player.y = state.player.y;
+
+            enemy.x = state.enemy.x;
+            enemy.y = state.enemy.y;
+            if(state.life >= 0){
+                score.text = "♥ ".repeat(state.life);
+            }else{
+                score.text = "";
+            }
+        }
+
         function handleClick(event){
-            yv = -300;
+            state.playerYV = -300;
         }
         function handleTick(event){
             let t = event.delta /1000 ;
             fall(t);
             enemyMove(t);
-            hitTest();
+            ElementUpdate(state);
+            hitTests();
             stage.update();
         }
         function fall(t){
-            if(yv<=1000){
-                if(player.y<=550){
-                    yv += t * 700;
+            if(state.playerYV<=1000){
+                if(state.player.y<=550){
+                    state.playerYV += t * 700;
                 }else{
-                    if(yv>=0){
-                        yv=0;
+                    if(state.playerYV>=0){
+                        state.playerYV=0;
                     }
                 }
             }
-            player.y += yv * t;
+            state.player.y += state.playerYV * t;
         }
 
         function enemyMove(t){
-            if(enemy.x<0){
-                enemy.x=500;
-                hitted = false;
+            if(state.enemy.x<0){
+                state.enemy.x=500;
+                state.hitted = false;
             }
-            enemy.x-= t *300;
+            state.enemy.x -= t *300;
         }
-        function hitTest(){
-            let point = player.localToLocal(0, 0, enemy);
-            let isHit = enemy.hitTest(point.x, point.y);
-            if(isHit && hitted ==false){
-                hitted = true;
-                life -=1;
-                if(life>=0){
-                    score.text = "♥ ".repeat(life);
-                }
+        function hitTests(){
+            let isHit = hitTest(state.player,state.enemy);
+            if(isHit && state.hitted ==false){
+                state.hitted = true;
+                state.life -=1;
             }
+        }
+        function hitTest(obj1,obj2){
+            let a = obj1.x - obj2.x;
+            let b = obj1.y - obj2.y;
+            let c = Math.sqrt(a * a + b * b);
+            if(c <= obj1.r + obj2.r){
+                return true;
+            }
+            return false;
         }
     </script>
 </html>
