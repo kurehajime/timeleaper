@@ -1,0 +1,112 @@
+<html>
+    <head>
+        <script src="https://code.createjs.com/1.0.0/createjs.min.js"></script>
+        <script src="https://code.createjs.com/1.0.0/tweenjs.min.js"></script>
+    </head>
+    <body onload="init();">
+        <canvas id="demoCanvas" width="500" height="500"></canvas>
+    </body>
+    <script>
+        class State{
+            constructor(){
+                this.life = 0;
+                this.yv = 0;
+                this.hitted = false;
+
+                this.playerX = 0;
+                this.playerY = 0;
+                this.playerYV = 0;
+                
+                this.enemyX = 0;
+                this.enemyY = 0;
+            }
+        }
+
+        var stage = new createjs.Stage("demoCanvas");
+        var player = new createjs.Shape();
+        var enemy = new createjs.Shape();
+        var rect = new createjs.Shape();
+        var score =new createjs.Text();
+        var watch = new createjs.Shape(); 
+        var state = new State();
+        var life = 0;
+        var yv = 0;
+        var hitted = false;
+        function init() {
+            life = 3;
+            rect.graphics.beginFill("White").drawRect(0,0,500,500);
+            stage.addChild(rect);
+
+            watch.graphics.beginFill("Yellow").drawRect(0,0,50,50);
+            watch.x = 440;
+            watch.y = 440;
+            stage.addChild(watch);
+
+            player.graphics.beginFill("DeepSkyBlue").drawCircle(0, 0, 10);
+            player.x = 100;
+            player.y = 100;
+            stage.addChild(player);
+
+            enemy.graphics.beginFill("Red").drawCircle(0, 0, 30);
+            enemy.x = 400;
+            enemy.y = 150;
+            stage.addChild(enemy);
+
+            score.color = "Blue";
+            score.text = "♥ ".repeat(life);
+            score.font = "bold 20px Arial";
+            score.x = 450;
+            score.y = 50;
+            stage.addChild(score);
+
+            stage.update();
+            
+            player.addEventListener("click", handleClick);
+            rect.addEventListener("click", handleClick);
+
+            createjs.Ticker.timingMode = createjs.Ticker.RAF;
+            createjs.Ticker.addEventListener("tick", handleTick);
+        }
+        function handleClick(event){
+            yv = -300;
+        }
+        function handleTick(event){
+            let t = event.delta /1000 ;
+            fall(t);
+            enemyMove(t);
+            hitTest();
+            stage.update();
+        }
+        function fall(t){
+            if(yv<=1000){
+                if(player.y<=550){
+                    yv += t * 700;
+                }else{
+                    if(yv>=0){
+                        yv=0;
+                    }
+                }
+            }
+            player.y += yv * t;
+        }
+
+        function enemyMove(t){
+            if(enemy.x<0){
+                enemy.x=500;
+                hitted = false;
+            }
+            enemy.x-= t *300;
+        }
+        function hitTest(){
+            let point = player.localToLocal(0, 0, enemy);
+            let isHit = enemy.hitTest(point.x, point.y);
+            if(isHit && hitted ==false){
+                hitted = true;
+                life -=1;
+                if(life>=0){
+                    score.text = "♥ ".repeat(life);
+                }
+            }
+        }
+    </script>
+</html>
